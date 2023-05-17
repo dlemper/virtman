@@ -4,11 +4,63 @@ struct Assets;
 
 static INDEX_HTML: &str = "index.html";
 
+async fn static_handler(uri: Uri) -> Response {
+    let path = uri.path().trim_start_matches('/');
+
+    if path.is_empty() || path == INDEX_HTML {
+        return index_html().await;
+    }
+
+    match Assets::get(path) {
+        Some(content) => {
+            let body = boxed(Full::from(content.data));
+            let mime = mime_guess::from_path(path).first_or_octet_stream();
+
+            Response::builder()
+                .header(header::CONTENT_TYPE, mime.as_ref())
+                .body(body)
+                .unwrap()
+        }
+        None => {
+            if path.contains('.') {
+                return not_found().await;
+            }
+
+            index_html().await
+        }
+    }
+}
+
+async fn index_html() -> Response {
+    match Assets::get(INDEX_HTML) {
+        Some(content) => {
+            let body = boxed(Full::from(content.data));
+
+            Response::builder()
+                .header(header::CONTENT_TYPE, "text/html")
+                .body(body)
+                .unwrap()
+        }
+        None => not_found().await,
+    }
+}
+
+async fn not_found() -> Response {
+    Response::builder()
+        .status(StatusCode::NOT_FOUND)
+        .body(boxed(Full::from("404")))
+        .unwrap()
+}
+
 use std::env;
 
 use virt::connect::Connect;
+use virt::domain::Domain;
 use virt::error::Error;
+use virt::storage_pool::StoragePool;
+use virt::storage_vol::StorageVol;
 use virt::sys;
+use virt::interface::Interface;
 
 use serde::{Deserialize, Serialize};
 
@@ -17,6 +69,15 @@ struct VmItem {
     id: u32,
     name: String,
     active: bool,
+}
+
+#[derive(Serialize, Deserialize)]
+struct VolInfo {
+    name: String,
+    path: String,
+    kind: u32,
+    capacity: u64,
+    allocation: u64,
 }
 
 fn show_hypervisor_info(conn: &Connect) -> Result<(), Error> {
@@ -160,7 +221,14 @@ fn show_domains(conn: &Connect) -> Result<(), Error> {
     }
 }*/
 
-use axum::{routing::get, Json, Router};
+use axum::{
+    body::{boxed, Full},
+    extract::Path,
+    http::{header, StatusCode, Uri},
+    response::Response,
+    routing::{delete, get, patch, post, put},
+    Router,
+};
 /*use std::sync::Arc;
 
 struct AppState {
@@ -197,25 +265,161 @@ fn disconnect(mut conn: Connect) {
     println!("Disconnected from hypervisor");
 }
 
-async fn getVms() -> String {
+async fn get_vms() -> String {
     let conn = connect();
+    let mut ret = String::from("");
+
     if let Ok(doms) = conn.list_all_domains(
         sys::VIR_CONNECT_LIST_DOMAINS_ACTIVE | sys::VIR_CONNECT_LIST_DOMAINS_INACTIVE,
     ) {
-        let mut vmList: Vec<VmItem> = Vec::new();
+        let mut vm_list: Vec<VmItem> = Vec::new();
+
         for dom in doms {
-            vmList.push(VmItem {
+            vm_list.push(VmItem {
                 id: dom.get_id().unwrap_or(0),
                 name: dom.get_name().unwrap_or_else(|_| String::from("no-name")),
                 active: dom.is_active().unwrap_or(false),
             });
         }
 
-        disconnect(conn);
-        return serde_json::to_string(&vmList).unwrap_or_default();
-    } else {
-        return "".to_string();
-    };
+        ret = serde_json::to_string(&vm_list).unwrap_or_default();
+    }
+    
+    disconnect(conn);
+    return ret;
+}
+
+async fn suspend_vm(Path(name): Path<String>) {
+    let conn = connect();
+
+    if let Ok(dom) = Domain::lookup_by_name(&conn, &name) {
+        if dom.suspend().is_ok() {
+            println!("Domain '{:?}' suspended, info: {:?}", name, dom.get_info());
+            //thread::sleep(time::Duration::from_millis(sec * 1000));
+        }
+    }
+    
+    disconnect(conn);
+    //Err(Error::last_error());
+}
+
+async fn start_vm(Path(name): Path<String>) {
+    let conn = connect();
+    
+    if let Ok(dom) = Domain::lookup_by_name(&conn, &name) {
+        if dom.create().is_ok() {
+            println!("Domain '{:?}' resumed, info: {:?}", name, dom.get_info());
+            return; //Ok(());
+        }
+    }
+    
+    disconnect(conn);
+    //Err(Error::last_error())
+}
+
+async fn resume_vm(Path(name): Path<String>) {
+    let conn = connect();
+    
+    if let Ok(dom) = Domain::lookup_by_name(&conn, &name) {
+        if dom.resume().is_ok() {
+            println!("Domain '{:?}' resumed, info: {:?}", name, dom.get_info());
+            return; //Ok(());
+        }
+    }
+    
+    disconnect(conn);
+    //Err(Error::last_error())
+}
+
+async fn delete_vm(Path(name): Path<String>) {
+    let conn = connect();
+    
+    if let Ok(dom) = Domain::lookup_by_name(&conn, &name) {
+        if dom.destroy().is_ok() {
+            println!("Domain '{:?}' resumed, info: {:?}", name, dom.get_info());
+            return; //Ok(());
+        }
+    }
+    
+    disconnect(conn);
+    //Err(Error::last_error())
+}
+
+/*async fn create_vm() {
+    let body = boxed(Full::from(content.data));
+    let conn = connect();
+    if let Ok(dom) = Domain::define_xml(&conn, &body) {
+        if dom.destroy().is_ok() {
+            //println!("Domain '{:?}' resumed, info: {:?}", name, dom.get_info());
+            return; //Ok(());
+        }
+    }
+    disconnect(conn);
+    //Err(Error::last_error())
+}*/
+
+async fn get_storage() -> String {
+    let conn = connect();
+    let mut ret = String::from("");
+
+    if let Ok(pool) = StoragePool::lookup_by_name(&conn, "default") {
+        if let Ok(vols) = pool.list_volumes() {
+            let mut vol_list: Vec<VolInfo> = Vec::new();
+
+            for volname in vols {
+                let vol = StorageVol::lookup_by_name(&pool, &volname).unwrap();
+                let info = vol.get_info().unwrap();
+
+                vol_list.push(VolInfo {
+                    name: vol.get_name().unwrap_or_default(),
+                    path: vol.get_path().unwrap_or_default(),
+                    kind: info.kind,
+                    capacity: info.capacity,
+                    allocation: info.allocation,
+                });
+            }
+
+            ret = serde_json::to_string(&vol_list).unwrap_or_default();
+        }
+    }
+
+    disconnect(conn);
+    return ret;
+}
+
+async fn get_networks() -> String {
+    let conn = connect();
+    let mut ret = String::from("");
+
+    if let Ok(networks) = conn.list_networks() {
+        ret = serde_json::to_string(&networks).unwrap_or_default();
+    }
+
+    disconnect(conn);
+    return ret;
+}
+
+use serde_transcode::Transcoder;
+
+async fn get_interfaces() -> String {
+    let conn = connect();
+    let mut ret = String::from("");
+
+    if let Ok(interfaces) = conn.list_interfaces() {
+        let ifaces: Vec<String> = interfaces.iter().map(|iface_name| {
+            let interface = Interface::lookup_by_name(&conn, &iface_name).unwrap();
+            let xml = interface.get_xml_desc(0).unwrap();
+            println!("{}", xml);
+            let mut deserializer = quick_xml::de::Deserializer::from_str(&xml);
+            println!("{:?}", deserializer);
+            return serde_json::to_string(&Transcoder::new(&mut deserializer)).unwrap();
+        }).collect();
+
+        ret = "[".to_owned()+&ifaces.join(",")+"]";
+    }
+
+    disconnect(conn);
+    return ret;
 }
 
 #[tokio::main]
@@ -224,8 +428,16 @@ async fn main() {
 
     // build our application with a single route
     let app = Router::new()
-        .route("/", get(|| async { "Hello, World!" }))
-        .route("/api/vm", get(getVms));
+        .fallback(static_handler)
+        //.route("/", get(|| async { "Hello, World!" }))
+        .route("/api/vm", get(get_vms))
+        .route("/api/vm/:name", delete(delete_vm))
+        .route("/api/vm/:name/start", patch(start_vm))
+        .route("/api/vm/:name/suspend", patch(suspend_vm))
+        .route("/api/vm/:name/resume", patch(resume_vm))
+        .route("/api/storage", get(get_storage))
+        .route("/api/network", get(get_networks))
+        .route("/api/interface", get(get_interfaces));
     //    .with_state(shared_state);
 
     // run it with hyper on localhost:3000
