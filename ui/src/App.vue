@@ -1,30 +1,21 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
-</template>
+  <header>
+    <div class="navbar bg-base-300">
+      <div class="flex-1">
+        <a class="btn btn-ghost normal-case text-xl">Virtman</a>
+        <ul class="menu menu-horizontal px-1">
+          <li><router-link to="/machine" activeClass="active">VMs</router-link></li>
+          <li><router-link to="/network" activeClass="active">Networks</router-link></li>
+          <li><router-link to="/storage" activeClass="active">Storage</router-link></li>
+        </ul>
+      </div>
+      <!--<div class="flex-none">
+        
+      </div>-->
+    </div>
+  </header>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
+  <main>
+    <router-view></router-view>
+  </main>
+</template>
