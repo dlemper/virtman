@@ -21,6 +21,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.71"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c7d0618f0e0b7e8ff11427422b64564d5fb0be1940354bfe2e0529b18a9d9b8"
+
+[[package]]
 name = "async-trait"
 version = "0.1.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -457,6 +463,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "minidom"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe549115a674f5ec64c754d85e37d6f42664bd0ef4ffb62b619489ad99c6cb1a"
+dependencies = [
+ "quick-xml 0.17.2",
+]
+
+[[package]]
 name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -584,6 +599,15 @@ dependencies = [
 
 [[package]]
 name = "quick-xml"
+version = "0.17.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe1e430bdcf30c9fdc25053b9c459bb1a4672af4617b6c783d7d91dc17c6bbb0"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
+name = "quick-xml"
 version = "0.28.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ce5e73202a820a31f8a0ee32ada5e21029c81fd9e3ebf668a40832e4219d9d1"
@@ -591,6 +615,18 @@ dependencies = [
  "memchr",
  "serde",
  "tokio",
+]
+
+[[package]]
+name = "quickxml_to_serde"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26f35112b35480fd72f63444289083eeedbd61d13907c82c4309f0ccda35e244"
+dependencies = [
+ "minidom",
+ "serde",
+ "serde_derive",
+ "serde_json",
 ]
 
 [[package]]
@@ -999,9 +1035,11 @@ dependencies = [
 name = "virtman"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "axum",
  "mime_guess",
- "quick-xml",
+ "quick-xml 0.28.2",
+ "quickxml_to_serde",
  "rust-embed",
  "serde",
  "serde-transcode",
