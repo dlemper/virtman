@@ -400,6 +400,7 @@ async fn get_networks() -> String {
 }
 
 use serde_transcode::Transcoder;
+use quickxml_to_serde::*;
 
 async fn get_interfaces() -> String {
     let conn = connect();
@@ -409,10 +410,7 @@ async fn get_interfaces() -> String {
         let ifaces: Vec<String> = interfaces.iter().map(|iface_name| {
             let interface = Interface::lookup_by_name(&conn, &iface_name).unwrap();
             let xml = interface.get_xml_desc(0).unwrap();
-            println!("{}", xml);
-            let mut deserializer = quick_xml::de::Deserializer::from_str(&xml);
-            println!("{:?}", deserializer);
-            return serde_json::to_string(&Transcoder::new(&mut deserializer)).unwrap();
+            return xml_string_to_json(xml, &Config::new_with_defaults()).unwrap().to_string();
         }).collect();
 
         ret = "[".to_owned()+&ifaces.join(",")+"]";
