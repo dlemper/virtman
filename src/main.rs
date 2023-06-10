@@ -129,7 +129,7 @@ async fn main() {
         //.route("/", get(|| async { "Hello, World!" }))
         .route("/api/vm", get(VirtualMachine::all))
         .route("/api/vm/:name", delete(VirtualMachine::delete))
-        .route("/apic/vm/:name/start", patch(VirtualMachine::start))
+        .route("/api/vm/:name/start", patch(VirtualMachine::start))
         .route("/api/vm/:name/suspend", patch(VirtualMachine::suspend))
         .route("/api/vm/:name/resume", patch(VirtualMachine::resume))
         .route("/api/storage", get(get_storage))
