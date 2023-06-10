@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 axum = "0.6.16"
 mime_guess = "2.0.4"
-quick-xml = { version = "0.28.2", features = ["async-tokio", "serialize"] }
+quickxml_to_serde = "0.5.0"
 rust-embed = "6.6.1"
 serde = { version = "1.0.160", features = ["derive"] }
 serde-transcode = "1.1.1"
