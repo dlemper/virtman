@@ -8,7 +8,7 @@ pub struct VirtConnection {
 
 impl VirtConnection {
     pub fn new() -> Result<Self> {
-        let uri = env::args().next().unwrap_or_default();
+        let uri = String::from("qemu:///system");//env::args().next().next().unwrap_or_default();
         return Ok(VirtConnection { uri });
     }
 
