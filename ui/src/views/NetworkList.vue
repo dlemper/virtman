@@ -4,11 +4,11 @@ import { mande } from "mande";
 
 const networkApi = mande("/api/network");
 const networks = ref();
-networkApi.get().then(i => { networks.value = i });
+networkApi.get().then(i => { networks.value = Array.isArray(i) ? i : [i] });
 
 const interfaceApi = mande("/api/interface");
 const interfaces = ref();
-interfaceApi.get().then(i => { interfaces.value = i });
+interfaceApi.get().then(i => { interfaces.value = Array.isArray(i) ? i : [i] });
 
 function formatProtocol(protos) {
   return protos.filter(proto => proto.ip).map(proto => `${proto["@family"]}: ${proto.ip["@address"]}/${proto.ip["@prefix"]}`).join(", ")
