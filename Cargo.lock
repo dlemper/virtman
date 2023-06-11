@@ -21,6 +21,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.71"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c7d0618f0e0b7e8ff11427422b64564d5fb0be1940354bfe2e0529b18a9d9b8"
+
+[[package]]
 name = "async-trait"
 version = "0.1.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -462,7 +468,7 @@ version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fe549115a674f5ec64c754d85e37d6f42664bd0ef4ffb62b619489ad99c6cb1a"
 dependencies = [
- "quick-xml",
+ "quick-xml 0.17.2",
 ]
 
 [[package]]
@@ -598,6 +604,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fe1e430bdcf30c9fdc25053b9c459bb1a4672af4617b6c783d7d91dc17c6bbb0"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "quickxml_to_serde"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26f35112b35480fd72f63444289083eeedbd61d13907c82c4309f0ccda35e244"
+dependencies = [
+ "minidom",
+ "serde",
+ "serde_derive",
+ "serde_json",
 ]
 
 [[package]]
@@ -1018,6 +1036,7 @@ dependencies = [
 name = "virtman"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "axum",
  "mime_guess",
  "quickxml_to_serde",
